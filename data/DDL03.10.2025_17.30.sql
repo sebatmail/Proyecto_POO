@@ -22,20 +22,20 @@ CREATE TABLE IF NOT EXISTS room(
     room_id INTEGER AUTO_INCREMENT,
     room_number VARCHAR(10) NOT NULL UNIQUE, -- Ej: '101', '205A'
     room_type VARCHAR(50) NOT NULL,          -- Ej: 'Single', 'Double', 'Suite'
-    price_per_night DECIMAL(10, 2) NOT NULL, -- Precio por noche (con dos decimales)
+    price DECIMAL(10, 2) NOT NULL, -- Precio por noche (con dos decimales)
     is_available BOOLEAN NOT NULL DEFAULT TRUE,
 
     CONSTRAINT pk_room PRIMARY KEY (room_id)
 );
-
+-- 3.- CREAR TABLA SERVICIOS 
 ---
 -- 3. REQUESTED_SERVICES (Servicio Adicional)
 ---
 CREATE TABLE IF NOT EXISTS requested_services(
-    service_id INTEGER AUTO_INCREMENT,
+    request_id INTEGER AUTO_INCREMENT,
     service_name VARCHAR(100) NOT NULL UNIQUE, -- Ej: 'Spa Access', 'Laundry Service'
     service_description VARCHAR(255),
-    unit_price DECIMAL(10, 2) NOT NULL,
+    quantity DECIMAL(10, 2) NOT NULL,
 
     CONSTRAINT pk_service PRIMARY KEY (service_id)
 );
