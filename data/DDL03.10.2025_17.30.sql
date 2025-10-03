@@ -5,6 +5,8 @@ USE iei_172_n2;
 ---
 CREATE TABLE IF NOT EXISTS guest(
     guest_id INTEGER AUTO_INCREMENT,
+    PASSPORT_ID VARCHAR(50) NOT NULL,
+    ID_CARD VARCHAR(50)     NOT NULL,
     first_name VARCHAR(50) NOT NULL, -- Corregido: 'name_guest' a 'first_name'
     last_name VARCHAR(50) NOT NULL,  -- Corregido: 'surname' a 'last_name'
     email VARCHAR(100) NOT NULL UNIQUE, -- Aumentado a 100 y añadido UNIQUE
@@ -27,9 +29,9 @@ CREATE TABLE IF NOT EXISTS room(
 );
 
 ---
--- 3. ADDITIONAL_SERVICE (Servicio Adicional)
+-- 3. REQUESTED_SERVICES (Servicio Adicional)
 ---
-CREATE TABLE IF NOT EXISTS additional_service(
+CREATE TABLE IF NOT EXISTS requested_services(
     service_id INTEGER AUTO_INCREMENT,
     service_name VARCHAR(100) NOT NULL UNIQUE, -- Ej: 'Spa Access', 'Laundry Service'
     service_description VARCHAR(255),
@@ -48,6 +50,7 @@ CREATE TABLE IF NOT EXISTS reservation(
     room_id INTEGER NOT NULL,           -- FK a la tabla room
     check_in_date DATE NOT NULL,
     check_out_date DATE NOT NULL,
+    stay_nights DATE NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL,
     is_cancelled BOOLEAN NOT NULL DEFAULT FALSE,
 
