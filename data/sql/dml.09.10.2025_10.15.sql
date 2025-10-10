@@ -1,10 +1,36 @@
--- Reemplaza 'nombre_tu_base_de_datos' con el nombre real de tu base de datos
 USE iei_172_n2;
----
--- 1. Inserción de Tipos de Habitación (equivalente a 'marcas' o 'modelos' de autos)
----
--- Se asume una tabla 'tipos_habitacion' con campos (id, nombre_tipo, capacidad_maxima, descripcion, precio_base)
-INSERT INTO tipos_habitacion (nombre_tipo, capacidad_maxima, descripcion, precio_base) VALUES
+
+-- ---------------------------------------
+-- 1. LIMPIEZA DE DATOS EXISTENTES (TRUNCATE)
+-- ---------------------------------------
+
+-- Deshabilitar comprobación de claves foráneas para truncar tablas con dependencias
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Borrar datos de las tablas dependientes primero  (opcional)
+TRUNCATE TABLE invoice;
+TRUNCATE TABLE stay_service;
+TRUNCATE TABLE stay;
+TRUNCATE TABLE reservation;
+
+-- Borrar datos de las tablas principales (opcional)
+TRUNCATE TABLE guest;
+TRUNCATE TABLE room;
+TRUNCATE TABLE room_type;
+TRUNCATE TABLE additional_service;
+TRUNCATE TABLE employees;
+TRUNCATE TABLE departments;
+
+-- Habilitar comprobación de claves foráneas
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+-- ---------------------------------------
+-- 2. INSERCIÓN DE DATOS NUEVOS (DML)
+-- ---------------------------------------
+
+-- 2.1. Inserción de Tipos de Habitación (ROOM_TYPE)
+INSERT INTO room_type (type_name, max_capacity, description, base_price) VALUES
 ('Sencilla', 2, 'Habitación con una cama matrimonial o dos individuales, baño privado.', 80.00),
 ('Doble', 4, 'Habitación espaciosa con dos camas matrimoniales, ideal para familias pequeñas.', 120.00),
 ('Ejecutiva', 2, 'Habitación con escritorio, acceso a internet de alta velocidad, cafetera premium.', 150.00),
@@ -13,74 +39,69 @@ INSERT INTO tipos_habitacion (nombre_tipo, capacidad_maxima, descripcion, precio
 ('Familiar', 6, 'Habitación con capacidad para hasta 6 personas, con literas o camas adicionales.', 140.00),
 ('Estudio', 2, 'Habitación con cocina básica (kitchenette) y zona de estar.', 110.00);
 
+-- 2.2. Inserción de Habitaciones Específicas (ROOM)
+INSERT INTO room (room_number, floor, room_type_id, view_type) VALUES
+('101', 1, (SELECT room_type_id FROM room_type WHERE type_name = 'Sencilla'), 'Ciudad'),
+('102', 1, (SELECT room_type_id FROM room_type WHERE type_name = 'Doble'), 'Ciudad'),
+('205', 2, (SELECT room_type_id FROM room_type WHERE type_name = 'Ejecutiva'), 'Piscina'),
+('310', 3, (SELECT room_type_id FROM room_type WHERE type_name = 'Suite Junior'), 'Mar'),
+('401', 4, (SELECT room_type_id FROM room_type WHERE type_name = 'Suite Presidencial'), 'Panorámica'),
+('215', 2, (SELECT room_type_id FROM room_type WHERE type_name = 'Doble'), 'Piscina'),
+('301', 3, (SELECT room_type_id FROM room_type WHERE type_name = 'Estudio'), 'Mar'),
+('115', 1, (SELECT room_type_id FROM room_type WHERE type_name = 'Familiar'), 'Ciudad');
 
----
--- 2. Inserción de Servicios Adicionales (equivalente a 'tipos_mecanico' o 'combustibles')
----
--- Se asume una tabla 'servicios' con campos (id, nombre_servicio, costo_adicional, descripcion)
-INSERT INTO servicios (nombre_servicio, costo_adicional, descripcion) VALUES
-('Desayuno Buffet', 15.00, 'Acceso ilimitado al desayuno estilo buffet del hotel.'),
-('Spa y Masajes', 60.00, 'Sesión de masaje relajante de 60 minutos o acceso completo a las instalaciones del spa.'),
-('Lavandería Rápida', 25.00, 'Servicio de lavado, secado y doblado con entrega en menos de 4 horas.'),
-('Parking Valet', 10.00, 'Servicio de aparcamiento y recogida de vehículos por el personal del hotel.'),
-('Late Check-out', 45.00, 'Permite permanecer en la habitación hasta las 17:00 horas (sujeto a disponibilidad).'),
-('Traslado Aeropuerto', 30.00, 'Transporte privado desde o hacia el aeropuerto.'),
-('Cama Adicional', 35.00, 'Inclusión de una cama plegable en la habitación.');
+-- 2.3. Inserción de Servicios Adicionales (ADDITIONAL_SERVICE)
+INSERT INTO additional_service (service_name, service_description, service_cost) VALUES
+('Desayuno Buffet', 'Acceso ilimitado al desayuno estilo buffet del hotel.', 15.00),
+('Spa y Masajes', 'Sesión de masaje relajante de 60 minutos o acceso completo a las instalaciones del spa.', 60.00),
+('Lavandería Rápida', 'Servicio de lavado, secado y doblado con entrega en menos de 4 horas.', 25.00),
+('Parking Valet', 'Servicio de aparcamiento y recogida de vehículos por el personal del hotel.', 10.00),
+('Late Check-out', 'Permite permanecer en la habitación hasta las 17:00 horas.', 45.00),
+('Traslado Aeropuerto', 'Transporte privado desde o hacia el aeropuerto.', 30.00),
+('Cama Adicional', 'Inclusión de una cama plegable en la habitación.', 35.00);
 
-
----
--- 3. Inserción de Habitaciones Específicas
----
--- Se asume una tabla 'habitaciones' con campos (id, numero_habitacion, piso, id_tipo_habitacion, vista)
--- NOTA: Asumo que tienes una forma de obtener el ID del tipo de habitación, ya sea por ID directo o subconsulta.
-INSERT INTO habitaciones (numero_habitacion, piso, id_tipo_habitacion, vista) VALUES
-(101, 1, (SELECT id FROM tipos_habitacion WHERE nombre_tipo = 'Sencilla'), 'Ciudad'),
-(102, 1, (SELECT id FROM tipos_habitacion WHERE nombre_tipo = 'Doble'), 'Ciudad'),
-(205, 2, (SELECT id FROM tipos_habitacion WHERE nombre_tipo = 'Ejecutiva'), 'Piscina'),
-(310, 3, (SELECT id FROM tipos_habitacion WHERE nombre_tipo = 'Suite Junior'), 'Mar'),
-(401, 4, (SELECT id FROM tipos_habitacion WHERE nombre_tipo = 'Suite Presidencial'), 'Panorámica'),
-(215, 2, (SELECT id FROM tipos_habitacion WHERE nombre_tipo = 'Doble'), 'Piscina'),
-(301, 3, (SELECT id FROM tipos_habitacion WHERE nombre_tipo = 'Estudio'), 'Mar'),
-(115, 1, (SELECT id FROM tipos_habitacion WHERE nombre_tipo = 'Familiar'), 'Ciudad');
-
-
----
--- 4. Inserción de Empleados/Departamentos (equivalente a 'comunas' o 'modelos' si los categorizas)
----
--- Se asume una tabla 'departamentos' con campos (id, nombre_departamento, descripcion)
-INSERT INTO departamentos (nombre_departamento, descripcion) VALUES
+-- 2.4. Inserción de Departamentos (DEPARTMENTS)
+INSERT INTO departments (department_name, description) VALUES
 ('Recepción', 'Gestión de check-in, check-out, reservas y atención al cliente 24/7.'),
 ('Limpieza y Mantenimiento', 'Encargados del aseo de habitaciones y áreas comunes, y reparaciones generales.'),
 ('Alimentos y Bebidas', 'Personal de cocina, meseros y bartenders de los restaurantes y bares.'),
 ('Administración', 'Gestión financiera, recursos humanos y dirección general del hotel.'),
 ('Ventas y Marketing', 'Promoción del hotel, gestión de eventos y paquetes vacacionales.');
 
--- Se asume una tabla 'empleados' con campos (id, nombre, apellido, cargo, id_departamento, fecha_contratacion)
-INSERT INTO empleados (nombre, apellido, cargo, id_departamento, fecha_contratacion) VALUES
-('Laura', 'Gómez', 'Recepcionista Senior', (SELECT id FROM departamentos WHERE nombre_departamento = 'Recepción'), '2022-01-15'),
-('Carlos', 'Díaz', 'Jefe de Cocina', (SELECT id FROM departamentos WHERE nombre_departamento = 'Alimentos y Bebidas'), '2020-07-20'),
-('Sofía', 'Ramírez', 'Camarera de Piso', (SELECT id FROM departamentos WHERE nombre_departamento = 'Limpieza y Mantenimiento'), '2023-03-10'),
-('Roberto', 'Mena', 'Gerente General', (SELECT id FROM departamentos WHERE nombre_departamento = 'Administración'), '2019-11-01'),
-('Ana', 'Pérez', 'Conserje', (SELECT id FROM departamentos WHERE nombre_departamento = 'Recepción'), '2024-05-01');
+-- 2.5. Inserción de Empleados (EMPLOYEES)
+INSERT INTO employees (first_name, last_name, position_title, department_id, hire_date) VALUES
+('Laura', 'Gómez', 'Recepcionista Senior', (SELECT department_id FROM departments WHERE department_name = 'Recepción'), '2022-01-15'),
+('Carlos', 'Díaz', 'Jefe de Cocina', (SELECT department_id FROM departments WHERE department_name = 'Alimentos y Bebidas'), '2020-07-20'),
+('Sofía', 'Ramírez', 'Camarera de Piso', (SELECT department_id FROM departments WHERE department_name = 'Limpieza y Mantenimiento'), '2023-03-10'),
+('Roberto', 'Mena', 'Gerente General', (SELECT department_id FROM departments WHERE department_name = 'Administración'), '2019-11-01'),
+('Ana', 'Pérez', 'Conserje', (SELECT department_id FROM departments WHERE department_name = 'Recepción'), '2024-05-01');
 
-
----
--- 5. Inserción de Huéspedes
----
--- Se asume una tabla 'huespedes' con campos (id, rut, nombre, apellido, email, telefono, nacionalidad)
-INSERT INTO huespedes (rut, nombre, apellido, email, telefono, nacionalidad) VALUES
+-- 2.6. Inserción de Huéspedes (GUEST)
+INSERT INTO guest (ID_CARD, first_name, last_name, email, phone, nationalidad) VALUES
 ('18123456-7', 'Martín', 'Soto', 'm.soto@ejemplo.com', '+56987654321', 'Chilena'),
 ('25987654-3', 'Emily', 'Johnson', 'emily.j@mail.com', '+15551234567', 'Estadounidense'),
 ('A9012345-B', 'Pierre', 'Lefevre', 'p.lefevre@france.fr', '+33612345678', 'Francesa'),
 ('15678901-2', 'Valentina', 'Rojas', 'v.rojas@mail.cl', '+56998765432', 'Chilena');
 
+-- 2.7. Inserción de Reservas (RESERVATION)
+INSERT INTO reservation (guest_id, room_id, check_in_date, check_out_date, total_price, status) VALUES
+((SELECT guest_id FROM guest WHERE ID_CARD = '18123456-7'), (SELECT room_id FROM room WHERE room_number = '205'), '2025-12-10', '2025-12-15', 750.00, 'Confirmada'),
+((SELECT guest_id FROM guest WHERE ID_CARD = '25987654-3'), (SELECT room_id FROM room WHERE room_number = '401'), '2025-11-01', '2025-11-05', 1800.00, 'Confirmada'),
+((SELECT guest_id FROM guest WHERE ID_CARD = 'A9012345-B'), (SELECT room_id FROM room WHERE room_number = '101'), '2025-10-25', '2025-10-28', 240.00, 'Pendiente');
 
----
--- 6. Inserción de Reservas (Ejemplo)
----
--- Se asume una tabla 'reservas' con campos (id, id_huesped, id_habitacion, fecha_llegada, fecha_salida, estado_reserva)
--- Se asume que los IDs de huésped y habitación se obtienen de las inserciones anteriores
-INSERT INTO reservas (id_huesped, id_habitacion, fecha_llegada, fecha_salida, estado_reserva) VALUES
-((SELECT id FROM huespedes WHERE rut = '18123456-7'), (SELECT id FROM habitaciones WHERE numero_habitacion = 205), '2025-12-10', '2025-12-15', 'Confirmada'),
-((SELECT id FROM huespedes WHERE rut = '25987654-3'), (SELECT id FROM habitaciones WHERE numero_habitacion = 401), '2025-11-01', '2025-11-05', 'Confirmada'),
-((SELECT id FROM huespedes WHERE rut = 'A9012345-B'), (SELECT id FROM habitaciones WHERE numero_habitacion = 101), '2025-10-25', '2025-10-28', 'Pendiente');
+-- 2.8. INSERCIÓN DE STAY (Estadía)
+-- Se asume que las dos primeras reservas confirmadas tienen ID 1 y 2
+INSERT INTO stay (reservation_id, check_in_actual, status) VALUES
+(1, '2025-12-10 14:30:00', 'Checked-in'),
+(2, '2025-11-01 15:00:00', 'Checked-in');
+
+-- 2.9. INSERCIÓN DE STAY_SERVICE (Servicios adicionales solicitados)
+-- Se asignan servicios a la primera estadía (stay_id = 1, Martín Soto)
+INSERT INTO stay_service (stay_id, service_id, quantity, service_date) VALUES
+(1, (SELECT service_id FROM additional_service WHERE service_name = 'Desayuno Buffet'), 2, '2025-12-11'),
+(1, (SELECT service_id FROM additional_service WHERE service_name = 'Parking Valet'), 5, '2025-12-10');
+
+-- 2.10. INSERCIÓN DE INVOICE (Factura)
+-- Se genera una factura para la segunda estadía (stay_id = 2, Emily Johnson)
+INSERT INTO invoice (stay_id, invoice_date, total_amount, payment_method, is_paid) VALUES
+(2, '2025-11-05', 1800.00, 'Tarjeta de Crédito', TRUE);
