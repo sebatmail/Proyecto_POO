@@ -1,1 +1,0 @@
-nombre_aplicacion = 'Gestión Hotel'
